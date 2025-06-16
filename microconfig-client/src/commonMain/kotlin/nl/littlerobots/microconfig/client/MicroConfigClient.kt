@@ -49,7 +49,8 @@ private val configJsonParser = Json { ignoreUnknownKeys = true }
  * @param cacheConfigPath the path to cache the config
  * @param defaultSettings the default settings
  * @param serializer the serializer for the settings
- * @param appProperties a function to return the current [AppProperties] for resolving the config
+ * @param appPropertiesProvider a function to return the current [AppProperties] for resolving the
+ *   config
  * @param httpClient the ktor http client to use.
  * @param logger an optional logger for logging error messages
  */
@@ -58,7 +59,7 @@ class MicroConfigClient<T>(
     private val configUrl: String,
     private val defaultSettings: T,
     private val serializer: KSerializer<T>,
-    private val appProperties: () -> AppProperties = { propertiesOf() },
+    private val appPropertiesProvider: () -> AppProperties = { propertiesOf() },
     private val httpClient: HttpClient = HttpClient { install(HttpCache) },
     private val logger: Logger? = null
 ) {
@@ -74,7 +75,8 @@ class MicroConfigClient<T>(
    * @param engine the ktor http client engine to use.
    * @param defaultSettings the default settings
    * @param serializer the serializer for the settings
-   * @param appProperties a function to return the current [AppProperties] for resolving the config
+   * @param appPropertiesProvider a function to return the current [AppProperties] for resolving the
+   *   config
    * @param logger an optional logger for logging error messages
    */
   constructor(
@@ -82,7 +84,7 @@ class MicroConfigClient<T>(
       configUrl: String,
       defaultSettings: T,
       serializer: KSerializer<T>,
-      appProperties: () -> AppProperties = { propertiesOf() },
+      appPropertiesProvider: () -> AppProperties = { propertiesOf() },
       engine: HttpClientEngine,
       logger: Logger?
   ) : this(
@@ -90,7 +92,7 @@ class MicroConfigClient<T>(
       configUrl,
       defaultSettings,
       serializer,
-      appProperties,
+      appPropertiesProvider,
       HttpClient(engine) { install(HttpCache) },
       logger,
   )
@@ -100,7 +102,7 @@ class MicroConfigClient<T>(
     return if (config == null) {
       defaultSettings
     } else {
-      runCatching { config.resolve(serializer, appProperties()) }
+      runCatching { config.resolve(serializer, appPropertiesProvider()) }
           .getOrElse {
             if (it is CancellationException) {
               throw it
