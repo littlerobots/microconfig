@@ -8,29 +8,25 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class ConfigTest {
-    private val parser = Json {
-        ignoreUnknownKeys = true
-    }
+  private val parser = Json { ignoreUnknownKeys = true }
 
+  @Serializable
+  data class TestSettings(
+      val enableFeature: Boolean = false,
+      val obsoleteFeature: String = "disabled",
+      val appstate: AppState = AppState.ACTIVE
+  ) {
     @Serializable
-    data class TestSettings(
-        val enableFeature: Boolean = false,
-        val obsoleteFeature: String = "disabled",
-        val appstate: AppState = AppState.ACTIVE
-    ) {
-        @Serializable
-        enum class AppState {
-            @SerialName("active")
-            ACTIVE,
-
-            @SerialName("inactive")
-            INACTIVE
-        }
+    enum class AppState {
+      @SerialName("active") ACTIVE,
+      @SerialName("inactive") INACTIVE
     }
+  }
 
-    @Test
-    fun `Resolves default config`() {
-        val json = """
+  @Test
+  fun `Resolves default config`() {
+    val json =
+        """
             {
               "settings": {
                 "enableFeature": true
@@ -47,15 +43,17 @@ class ConfigTest {
                 }
               ]
             }
-        """.trimIndent()
-        val config = parser.decodeFromString<Config>(json)
-        val settings = config.resolve(TestSettings.serializer(), emptyMap())
-        assertEquals(TestSettings(enableFeature = true, obsoleteFeature = "disabled"), settings)
-    }
+        """
+            .trimIndent()
+    val config = parser.decodeFromString<Config>(json)
+    val settings = config.resolve(TestSettings.serializer(), emptyMap())
+    assertEquals(TestSettings(enableFeature = true, obsoleteFeature = "disabled"), settings)
+  }
 
-    @Test
-    fun `Resolves override`() {
-        val json = """
+  @Test
+  fun `Resolves override`() {
+    val json =
+        """
             {
               "settings": {
                 "enableFeature": true
@@ -73,28 +71,26 @@ class ConfigTest {
                 }
               ]
             }
-        """.trimIndent()
-        val config = parser.decodeFromString<Config>(json)
-        val settings = config.resolve(
+        """
+            .trimIndent()
+    val config = parser.decodeFromString<Config>(json)
+    val settings =
+        config.resolve(
             TestSettings.serializer(),
             propertiesOf(
-                "version" to VersionProperty(
-                    "0.8.2",
-                    { fail("Should handle constraint") })
-            )
-        )
-        assertEquals(
-            TestSettings(
-                enableFeature = false,
-                obsoleteFeature = "enabled",
-                appstate = TestSettings.AppState.INACTIVE
-            ), settings
-        )
-    }
+                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") })))
+    assertEquals(
+        TestSettings(
+            enableFeature = false,
+            obsoleteFeature = "enabled",
+            appstate = TestSettings.AppState.INACTIVE),
+        settings)
+  }
 
-    @Test
-    fun `Does not resolve override for missing properties`() {
-        val json = """
+  @Test
+  fun `Does not resolve override for missing properties`() {
+    val json =
+        """
             {
               "settings": {
                 "enableFeature": true
@@ -113,20 +109,14 @@ class ConfigTest {
                 }
               ]
             }
-        """.trimIndent()
-        val config = parser.decodeFromString<Config>(json)
-        val settings = config.resolve(
+        """
+            .trimIndent()
+    val config = parser.decodeFromString<Config>(json)
+    val settings =
+        config.resolve(
             TestSettings.serializer(),
             propertiesOf(
-                "version" to VersionProperty(
-                    "0.8.2",
-                    { fail("Should handle constraint") })
-            )
-        )
-        assertEquals(
-            TestSettings(
-                enableFeature = true
-            ), settings
-        )
-    }
+                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") })))
+    assertEquals(TestSettings(enableFeature = true), settings)
+  }
 }
