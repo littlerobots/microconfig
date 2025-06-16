@@ -20,6 +20,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsBytes
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.core.writeFully
 import kotlinx.coroutines.Dispatchers
@@ -78,36 +79,30 @@ class MicroConfigClient(
   ) : this(cacheConfigPath, configUrl, HttpClient(engine) { install(HttpCache) }, logger)
 
   /**
-   * Get the config from the server or cache. The client will attempt a network call with a
-   * `max-age` `Cache-Control` header of [maxAgeHours]. If the network call fails the config will be
-   * returned from the locally cached, if available.
+   * Get the config from the server, falling back to the local cache if available.
    *
-   * @param maxAgeHours the number of hours the config may be stale when fetching from the network
-   *   without refreshing
    * @return a [ConfigResult] that returns a (cached) config or [ConfigResult.Unavailable] if the
    *   config could not be retrieved.
    */
-  suspend fun getConfig(maxAgeHours: Int = 4): ConfigResult {
+  suspend fun getConfig(): ConfigResult {
     return runCatching {
           val response =
               httpClient.get(configUrl) {
-                headers.append("Cache-Control", "max-stale=${maxAgeHours * 3600}")
+                // Accept a slightly stale response
+                // Mostly for web servers without proper cache headers
+                headers.append(HttpHeaders.CacheControl, "max-stale=60")
               }
           if (response.status == HttpStatusCode.OK) {
             val configJson = response.bodyAsBytes()
             val config = configJsonParser.decodeFromString<Config>(configJson.decodeToString())
-            if (response.headers["Warning"] == "110") {
-              ConfigResult.Cache(config)
-            } else {
-              storeConfig(configJson)
-              ConfigResult.Network(config)
-            }
+            storeConfig(configJson)
+            ConfigResult.Network(config)
           } else {
             getFromCache()?.let { ConfigResult.Cache(it) } ?: ConfigResult.Unavailable
           }
         }
-        .getOrElse {
-          logger?.log("Error getting config from the network", it)
+        .getOrElse { throwable ->
+          logger?.log("Error getting config from the network", throwable)
           getFromCache()?.let { ConfigResult.Cache(it) } ?: ConfigResult.Unavailable
         }
   }

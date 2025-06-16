@@ -45,7 +45,8 @@ class MicroConfigClientTest {
       respond(
           content = content,
           status = HttpStatusCode.OK,
-          headers = headersOf(HttpHeaders.ContentType, "application/json"))
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
+      )
     }
 
     val tmpFile = createTempFile()
@@ -68,7 +69,8 @@ class MicroConfigClientTest {
       respond(
           content = "oops",
           status = HttpStatusCode.ServiceUnavailable,
-          headers = headersOf(HttpHeaders.ContentType, "application/json"))
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
+      )
     }
 
     val tmpFile = createTempFile()
@@ -86,7 +88,8 @@ class MicroConfigClientTest {
       respond(
           content = "oops",
           status = HttpStatusCode.ServiceUnavailable,
-          headers = headersOf(HttpHeaders.ContentType, "application/json"))
+          headers = headersOf(HttpHeaders.ContentType, "application/json"),
+      )
     }
     val tmpFile = createTempFile()
     val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
@@ -97,7 +100,7 @@ class MicroConfigClientTest {
 
   @Test
   @IgnoreNative
-  fun `Gets config from the network once per session`() {
+  fun `Gets config from the network once per session if cache headers are set`() {
     val content =
         "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":false,\"obsoleteFeature\":false}}]}"
     val mockEngine = MockEngine { _ ->
@@ -106,9 +109,10 @@ class MicroConfigClientTest {
           status = HttpStatusCode.OK,
           headers =
               headersOf(
-                  HttpHeaders.ContentType,
-                  "application/json",
-              ))
+                  HttpHeaders.ContentType to listOf("application/json"),
+                  HttpHeaders.CacheControl to listOf("max-age=3600"),
+              ),
+      )
     }
 
     val tmpFile = createTempFile()
@@ -116,7 +120,7 @@ class MicroConfigClientTest {
     runBlocking { configClient.getConfig() }
     val response = runBlocking { configClient.getConfig() }
 
-    assertTrue(response is ConfigResult.Cache)
+    assertTrue(response is ConfigResult.Network)
     assertEquals(1, mockEngine.requestHistory.size)
   }
 
@@ -133,7 +137,8 @@ class MicroConfigClientTest {
               headersOf(
                   HttpHeaders.ContentType,
                   "application/json",
-              ))
+              ),
+      )
     }
 
     val tmpFile = createTempFile()
