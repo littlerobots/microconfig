@@ -23,6 +23,7 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.core.writeFully
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -31,16 +32,12 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import nl.littlerobots.microconfig.AppProperties
 import nl.littlerobots.microconfig.Config
-
-sealed class ConfigResult {
-  data class Network(val config: Config) : ConfigResult()
-
-  data class Cache(val config: Config) : ConfigResult()
-
-  data object Unavailable : ConfigResult()
-}
+import nl.littlerobots.microconfig.propertiesOf
+import nl.littlerobots.microconfig.resolve
 
 private val configJsonParser = Json { ignoreUnknownKeys = true }
 
@@ -50,12 +47,18 @@ private val configJsonParser = Json { ignoreUnknownKeys = true }
  * cache to reduce network calls if the config is fetched often.
  *
  * @param cacheConfigPath the path to cache the config
+ * @param defaultSettings the default settings
+ * @param serializer the serializer for the settings
+ * @param appProperties a function to return the current [AppProperties] for resolving the config
  * @param httpClient the ktor http client to use.
  * @param logger an optional logger for logging error messages
  */
-class MicroConfigClient(
+class MicroConfigClient<T>(
     cacheConfigPath: String,
     private val configUrl: String,
+    private val defaultSettings: T,
+    private val serializer: KSerializer<T>,
+    private val appProperties: () -> AppProperties = { propertiesOf() },
     private val httpClient: HttpClient = HttpClient { install(HttpCache) },
     private val logger: Logger? = null
 ) {
@@ -69,22 +72,46 @@ class MicroConfigClient(
   /**
    * @param cacheConfigPath the path to cache the config
    * @param engine the ktor http client engine to use.
+   * @param defaultSettings the default settings
+   * @param serializer the serializer for the settings
+   * @param appProperties a function to return the current [AppProperties] for resolving the config
    * @param logger an optional logger for logging error messages
    */
   constructor(
       cacheConfigPath: String,
       configUrl: String,
+      defaultSettings: T,
+      serializer: KSerializer<T>,
+      appProperties: () -> AppProperties = { propertiesOf() },
       engine: HttpClientEngine,
       logger: Logger?
-  ) : this(cacheConfigPath, configUrl, HttpClient(engine) { install(HttpCache) }, logger)
+  ) : this(
+      cacheConfigPath,
+      configUrl,
+      defaultSettings,
+      serializer,
+      appProperties,
+      HttpClient(engine) { install(HttpCache) },
+      logger,
+  )
 
-  /**
-   * Get the config from the server, falling back to the local cache if available.
-   *
-   * @return a [ConfigResult] that returns a (cached) config or [ConfigResult.Unavailable] if the
-   *   config could not be retrieved.
-   */
-  suspend fun getConfig(): ConfigResult {
+  suspend fun resolveSettings(): T {
+    val config = getAndStoreConfig() ?: getFromCache()
+    return if (config == null) {
+      defaultSettings
+    } else {
+      runCatching { config.resolve(serializer, appProperties()) }
+          .getOrElse {
+            if (it is CancellationException) {
+              throw it
+            }
+            logger?.log("Error resolving config, returning default settings", it)
+            defaultSettings
+          }
+    }
+  }
+
+  private suspend fun getAndStoreConfig(): Config? {
     return runCatching {
           val response =
               httpClient.get(configUrl) {
@@ -96,14 +123,17 @@ class MicroConfigClient(
             val configJson = response.bodyAsBytes()
             val config = configJsonParser.decodeFromString<Config>(configJson.decodeToString())
             storeConfig(configJson)
-            ConfigResult.Network(config)
+            config
           } else {
-            getFromCache()?.let { ConfigResult.Cache(it) } ?: ConfigResult.Unavailable
+            getFromCache()
           }
         }
         .getOrElse { throwable ->
+          if (throwable is CancellationException) {
+            throw throwable
+          }
           logger?.log("Error getting config from the network", throwable)
-          getFromCache()?.let { ConfigResult.Cache(it) } ?: ConfigResult.Unavailable
+          null
         }
   }
 
@@ -116,6 +146,9 @@ class MicroConfigClient(
               configJsonParser.decodeFromString<Config>(configBytes.decodeToString())
             }
             .getOrElse {
+              if (it is CancellationException) {
+                throw it
+              }
               logger?.log("Could not get config from cache", it)
               null
             }
@@ -135,7 +168,12 @@ class MicroConfigClient(
             sink.flush()
             sink.close()
           }
-          .getOrElse { logger?.log("Error storing config", it) }
+          .getOrElse {
+            if (it is CancellationException) {
+              throw it
+            }
+            logger?.log("Error storing config", it)
+          }
     }
   }
 }

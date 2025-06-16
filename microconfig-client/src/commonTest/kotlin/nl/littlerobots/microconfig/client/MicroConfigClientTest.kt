@@ -24,23 +24,25 @@ import io.ktor.utils.io.core.toByteArray
 import io.ktor.utils.io.core.writeFully
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
+import kotlinx.serialization.Serializable
 
 expect fun createTempFile(): Path
 
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION) expect annotation class IgnoreNative()
+
+@Serializable data class TestSettings(val enableFeature: Boolean = false)
 
 class MicroConfigClientTest {
   @Test
   @IgnoreNative
   fun `Gets config from the network and caches it`() {
     val content =
-        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":false,\"obsoleteFeature\":false}}]}"
+        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":true,\"obsoleteFeature\":false}}]}"
     val mockEngine = MockEngine { _ ->
       respond(
           content = content,
@@ -50,21 +52,29 @@ class MicroConfigClientTest {
     }
 
     val tmpFile = createTempFile()
-    val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
-    val result = runBlocking { configClient.getConfig() }
+    val configClient =
+        MicroConfigClient(
+            tmpFile.toString(),
+            "/config.json",
+            TestSettings(),
+            TestSettings.serializer(),
+            engine = mockEngine,
+            logger = null,
+        )
+    val result = runBlocking { configClient.resolveSettings() }
 
     val cached =
         SystemFileSystem.source(tmpFile).buffered().use { it.readByteArray().decodeToString() }
 
-    assertTrue(result is ConfigResult.Network)
     assertEquals(content, cached)
+    assertEquals(TestSettings(enableFeature = true), result)
   }
 
   @Test
   @IgnoreNative
   fun `Gets cached config on non 200 status code`() {
     val content =
-        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":false,\"obsoleteFeature\":false}}]}"
+        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":true,\"obsoleteFeature\":false}}]}"
     val mockEngine = MockEngine { _ ->
       respond(
           content = "oops",
@@ -75,15 +85,23 @@ class MicroConfigClientTest {
 
     val tmpFile = createTempFile()
     SystemFileSystem.sink(tmpFile).buffered().use { it.writeFully(content.toByteArray()) }
-    val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
-    val result = runBlocking { configClient.getConfig() }
+    val configClient =
+        MicroConfigClient(
+            tmpFile.toString(),
+            "/config.json",
+            TestSettings(),
+            TestSettings.serializer(),
+            engine = mockEngine,
+            logger = null,
+        )
+    val result = runBlocking { configClient.resolveSettings() }
 
-    assertTrue(result is ConfigResult.Cache)
+    assertEquals(TestSettings(enableFeature = true), result)
   }
 
   @Test
   @IgnoreNative
-  fun `Returns unavailable if config is not cached`() {
+  fun `Returns default settings if config is not cached`() {
     val mockEngine = MockEngine { _ ->
       respond(
           content = "oops",
@@ -92,17 +110,25 @@ class MicroConfigClientTest {
       )
     }
     val tmpFile = createTempFile()
-    val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
-    val result = runBlocking { configClient.getConfig() }
+    val configClient =
+        MicroConfigClient(
+            tmpFile.toString(),
+            "/config.json",
+            TestSettings(),
+            TestSettings.serializer(),
+            engine = mockEngine,
+            logger = null,
+        )
+    val result = runBlocking { configClient.resolveSettings() }
 
-    assertTrue(result is ConfigResult.Unavailable)
+    assertEquals(TestSettings(), result)
   }
 
   @Test
   @IgnoreNative
   fun `Gets config from the network once per session if cache headers are set`() {
     val content =
-        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":false,\"obsoleteFeature\":false}}]}"
+        "{\"settings\":{\"enableFeature\":true},\"overrides\":[{\"matches\":[{\"version\":\"<1.0.0\"}],\"settings\":{\"enableFeature\":true,\"obsoleteFeature\":false}}]}"
     val mockEngine = MockEngine { _ ->
       respond(
           content = content,
@@ -116,17 +142,25 @@ class MicroConfigClientTest {
     }
 
     val tmpFile = createTempFile()
-    val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
-    runBlocking { configClient.getConfig() }
-    val response = runBlocking { configClient.getConfig() }
+    val configClient =
+        MicroConfigClient(
+            tmpFile.toString(),
+            "/config.json",
+            TestSettings(),
+            TestSettings.serializer(),
+            engine = mockEngine,
+            logger = null,
+        )
+    runBlocking { configClient.resolveSettings() }
+    val response = runBlocking { configClient.resolveSettings() }
 
-    assertTrue(response is ConfigResult.Network)
     assertEquals(1, mockEngine.requestHistory.size)
+    assertEquals(TestSettings(true), response)
   }
 
   @Test
   @IgnoreNative
-  fun `Returns unavailable on parse error`() {
+  fun `Returns default settings on parse error`() {
     val content = """{"test"}"""
 
     val mockEngine = MockEngine { _ ->
@@ -142,9 +176,17 @@ class MicroConfigClientTest {
     }
 
     val tmpFile = createTempFile()
-    val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
-    val result = runBlocking { configClient.getConfig() }
+    val configClient =
+        MicroConfigClient(
+            tmpFile.toString(),
+            "/config.json",
+            TestSettings(),
+            TestSettings.serializer(),
+            engine = mockEngine,
+            logger = null,
+        )
+    val result = runBlocking { configClient.resolveSettings() }
 
-    assertTrue(result is ConfigResult.Unavailable)
+    assertEquals(TestSettings(), result)
   }
 }
