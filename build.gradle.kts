@@ -13,6 +13,7 @@ configure<SpotlessExtension> {
   kotlin {
     target("**/*.kt")
     ktfmt("0.54")
+    licenseHeaderFile(rootProject.file("spotless/license.txt"))
   }
   kotlinGradle {
     target("*.gradle.kts")

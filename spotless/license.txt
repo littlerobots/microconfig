@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Little Robots
+ * Copyright $YEAR Little Robots
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.littlerobots.microconfig.client
-
-import kotlinx.io.files.Path
-
-actual fun createTempFile(): Path {
-  return Path(kotlin.io.path.createTempFile().toAbsolutePath().toString())
-}
-
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-actual annotation class IgnoreNative actual constructor()
