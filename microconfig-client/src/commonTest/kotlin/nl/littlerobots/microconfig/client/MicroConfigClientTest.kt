@@ -36,17 +36,16 @@ class MicroConfigClientTest {
         }
 
         val tmpFile = createTempFile()
-        val configClient = MicroConfigClient(tmpFile, mockEngine, null)
+        val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
         val result = runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
 
         val cached = SystemFileSystem.source(tmpFile).buffered().use {
             it.readByteArray().decodeToString()
         }
 
-        assertTrue(result is ConfigResponse.Network)
-        assertEquals(1, result.config.overrides.size)
+        assertTrue(result is ConfigResult.Network)
         assertEquals(content, cached)
     }
 
@@ -67,13 +66,12 @@ class MicroConfigClientTest {
         SystemFileSystem.sink(tmpFile).buffered().use {
             it.writeFully(content.toByteArray())
         }
-        val configClient = MicroConfigClient(tmpFile, mockEngine, null)
+        val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
         val result = runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
 
-        assertTrue(result is ConfigResponse.Cache)
-        assertEquals(1, result.config.overrides.size)
+        assertTrue(result is ConfigResult.Cache)
     }
 
     @Test
@@ -87,12 +85,12 @@ class MicroConfigClientTest {
             )
         }
         val tmpFile = createTempFile()
-        val configClient = MicroConfigClient(tmpFile, mockEngine, null)
+        val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
         val result = runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
 
-        assertTrue(result is ConfigResponse.Unavailable)
+        assertTrue(result is ConfigResult.Unavailable)
     }
 
     @Test
@@ -111,15 +109,15 @@ class MicroConfigClientTest {
         }
 
         val tmpFile = createTempFile()
-        val configClient = MicroConfigClient(tmpFile, mockEngine, null)
+        val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
         runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
         val response = runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
 
-        assertTrue(response is ConfigResponse.Cache)
+        assertTrue(response is ConfigResult.Cache)
         assertEquals(1, mockEngine.requestHistory.size)
     }
 
@@ -139,11 +137,11 @@ class MicroConfigClientTest {
         }
 
         val tmpFile = createTempFile()
-        val configClient = MicroConfigClient(tmpFile, mockEngine, null)
+        val configClient = MicroConfigClient(tmpFile.toString(), "/config.json", mockEngine, null)
         val result = runBlocking {
-            configClient.getConfig("/config.json")
+            configClient.getConfig()
         }
 
-        assertTrue(result is ConfigResponse.Unavailable)
+        assertTrue(result is ConfigResult.Unavailable)
     }
 }

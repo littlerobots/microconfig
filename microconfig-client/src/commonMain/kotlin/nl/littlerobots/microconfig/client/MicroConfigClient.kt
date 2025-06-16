@@ -18,10 +18,10 @@ import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 import nl.littlerobots.microconfig.Config
 
-sealed class ConfigResponse {
-    data class Network(val config: Config) : ConfigResponse()
-    data class Cache(val config: Config) : ConfigResponse()
-    data object Unavailable : ConfigResponse()
+sealed class ConfigResult {
+    data class Network(val config: Config) : ConfigResult()
+    data class Cache(val config: Config) : ConfigResult()
+    data object Unavailable : ConfigResult()
 }
 
 private val configJsonParser = Json {
@@ -39,12 +39,15 @@ private val configJsonParser = Json {
  * @param logger an optional logger for logging error messages
  */
 class MicroConfigClient(
-    private val cacheConfigPath: Path,
+    cacheConfigPath: String,
+    private val configUrl: String,
     private val httpClient: HttpClient = HttpClient {
         install(HttpCache)
     },
     private val logger: Logger? = null
 ) {
+
+    private val cacheConfigPath = Path(cacheConfigPath)
 
     interface Logger {
         fun log(message: String, exception: Throwable?)
@@ -55,36 +58,50 @@ class MicroConfigClient(
      * @param engine the ktor http client engine to use.
      * @param logger an optional logger for logging error messages
      */
-    constructor(cacheConfigPath: Path, engine: HttpClientEngine, logger: Logger?) : this(
+    constructor(
+        cacheConfigPath: String,
+        configUrl: String,
+        engine: HttpClientEngine,
+        logger: Logger?
+    ) : this(
         cacheConfigPath,
+        configUrl,
         HttpClient(engine) { install(HttpCache) },
         logger
     )
 
-    suspend fun getConfig(url: String): ConfigResponse {
+    /**
+     * Get the config from the server or cache. The client will attempt a network call with a
+     * `max-age` `Cache-Control` header of [maxAgeHours].
+     * If the network call fails the config will be returned from the locally cached, if available.
+     *
+     * @param maxAgeHours the number of hours the config may be stale when fetching from the network without refreshing
+     * @return a [ConfigResult] that returns a (cached) config or [ConfigResult.Unavailable] if the config could not be retrieved.
+     */
+    suspend fun getConfig(maxAgeHours: Int = 4): ConfigResult {
         return runCatching {
-            val response = httpClient.get(url) {
-                headers.append("Cache-Control", "max-stale=${2 * 3600}")
+            val response = httpClient.get(configUrl) {
+                headers.append("Cache-Control", "max-stale=${maxAgeHours * 3600}")
             }
             if (response.status == HttpStatusCode.OK) {
                 val configJson = response.bodyAsBytes()
                 val config = configJsonParser.decodeFromString<Config>(configJson.decodeToString())
                 if (response.headers["Warning"] == "110") {
-                    ConfigResponse.Cache(config)
+                    ConfigResult.Cache(config)
                 } else {
                     storeConfig(configJson)
-                    ConfigResponse.Network(config)
+                    ConfigResult.Network(config)
                 }
             } else {
                 getFromCache()?.let {
-                    ConfigResponse.Cache(it)
-                } ?: ConfigResponse.Unavailable
+                    ConfigResult.Cache(it)
+                } ?: ConfigResult.Unavailable
             }
         }.getOrElse {
             logger?.log("Error getting config from the network", it)
             getFromCache()?.let {
-                ConfigResponse.Cache(it)
-            } ?: ConfigResponse.Unavailable
+                ConfigResult.Cache(it)
+            } ?: ConfigResult.Unavailable
         }
     }
 
