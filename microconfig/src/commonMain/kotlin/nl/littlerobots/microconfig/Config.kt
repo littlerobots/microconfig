@@ -27,6 +27,8 @@ import kotlinx.serialization.json.buildJsonObject
 
 @Serializable data class Config(val settings: JsonObject, val overrides: List<Override>)
 
+typealias AppProperties = Map<String, RuntimeProperty>
+
 private val resolveSettingsParser = Json {
   ignoreUnknownKeys = true
   isLenient = true
@@ -58,7 +60,7 @@ private fun matchesAny(
 @Throws(SerializationException::class, IllegalArgumentException::class)
 fun <T> Config.resolve(
     serializer: KSerializer<T>,
-    properties: Map<String, RuntimeProperty>,
+    properties: AppProperties,
     activationTime: Instant = Clock.System.now()
 ): T {
 
