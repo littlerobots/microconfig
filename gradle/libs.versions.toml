@@ -5,6 +5,8 @@ kotlin = "2.1.21"
 kotlinxDatetime = "0.6.2"
 
 [libraries]
+androidLibrary-multiplatform-plugin = { module = "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin", version.ref = "agp" }
+kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
 kotlin-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }

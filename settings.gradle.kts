@@ -32,3 +32,5 @@ dependencyResolutionManagement {
 include(":microconfig")
 
 include(":microconfig-client")
+
+includeBuild("build-config")
