@@ -21,7 +21,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 
@@ -67,7 +66,6 @@ fun <T> Config.resolve(
     properties: AppProperties,
     activationTime: Instant = Clock.System.now()
 ): T {
-
   val resolvedSettings =
       overrides.fold(settings) { settings, override ->
         // if we have any unknown properties, it's no match
@@ -85,6 +83,5 @@ fun <T> Config.resolve(
           settings
         }
       }
-  JsonElement.serializer()
   return resolveSettingsParser.decodeFromJsonElement(serializer, resolvedSettings)
 }

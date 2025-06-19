@@ -22,6 +22,7 @@ configure<SpotlessExtension> {
 }
 
 tasks.register<Copy>("updateGitHooks") {
+  inputs.files("./.git/hooks", "./scripts/pre-commit")
   from("./scripts/pre-commit")
   into("./.git/hooks")
 }
