@@ -1,4 +1,4 @@
-rootProject.name = "microconfig"
+rootProject.name = "microconfig-lib"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
