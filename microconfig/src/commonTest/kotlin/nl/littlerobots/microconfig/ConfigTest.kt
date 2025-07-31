@@ -134,4 +134,12 @@ class ConfigTest {
                 "version" to VersionProperty("0.8.2", { fail("Should handle constraint") })))
     assertEquals(TestSettings(enableFeature = true), settings)
   }
+
+  @Test
+  fun `parses empty object`() {
+    val json = "{}"
+    val config = parser.decodeFromString<Config>(json)
+    val settings = config.resolve(TestSettings.serializer(), propertiesOf())
+    assertEquals(TestSettings(), settings)
+  }
 }
