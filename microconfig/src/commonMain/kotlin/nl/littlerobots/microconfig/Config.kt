@@ -37,12 +37,12 @@ private val resolveSettingsParser = Json {
   isLenient = true
 }
 
-private fun matchesAny(
+private fun matchesConditions(
     conditions: List<ConditionProperties>,
     properties: Map<String, RuntimeProperty>
 ): Boolean {
   val keys = properties.keys
-  return conditions.any { condition ->
+  return conditions.all { condition ->
     keys.containsAll(condition.keys) &&
         properties
             .filter { condition.keys.contains(it.key) }
@@ -68,8 +68,7 @@ fun <T> Config.resolve(
 ): T {
   val resolvedSettings =
       overrides.fold(settings) { settings, override ->
-        // if we have any unknown properties, it's no match
-        if (matchesAny(override.matching, properties) &&
+        if (matchesConditions(override.matching, properties) &&
             override.schedule.matches(activationTime)) {
           buildJsonObject {
             for (entry in settings) {

@@ -93,13 +93,60 @@ class ConfigTest {
         config.resolve(
             TestSettings.serializer(),
             propertiesOf(
-                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") })))
+                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") }),
+            ),
+        )
     assertEquals(
         TestSettings(
             enableFeature = false,
             obsoleteFeature = "enabled",
-            appstate = TestSettings.AppState.INACTIVE),
-        settings)
+            appstate = TestSettings.AppState.INACTIVE,
+        ),
+        settings,
+    )
+  }
+
+  @Test
+  fun `Resolves with multiple conditions override`() {
+    val json =
+        """
+            {
+              "settings": {
+                "enableFeature": false
+              },
+              "overrides": [
+                {
+                  "matching": [{
+                    "version": "<1.0.0"
+                  }, { "platform" : "ios" }],
+                  "settings": {
+                    "enableFeature": true,
+                    "obsoleteFeature": "enabled",
+                    "appstate" : "inactive"
+                  }
+                }
+              ]
+            }
+        """
+            .trimIndent()
+    val config = parser.decodeFromString<Config>(json)
+    val settings =
+        config.resolve(
+            TestSettings.serializer(),
+            propertiesOf(
+                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") }),
+                "platform" to StringProperty("ios"),
+            ),
+        )
+    assertEquals(
+        TestSettings(
+            enableFeature = true,
+            obsoleteFeature = "enabled",
+            appstate = TestSettings.AppState.INACTIVE,
+        ),
+        settings,
+    )
+    assertEquals(TestSettings(), config.resolve(TestSettings.serializer(), propertiesOf()))
   }
 
   @Test
@@ -131,7 +178,9 @@ class ConfigTest {
         config.resolve(
             TestSettings.serializer(),
             propertiesOf(
-                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") })))
+                "version" to VersionProperty("0.8.2", { fail("Should handle constraint") }),
+            ),
+        )
     assertEquals(TestSettings(enableFeature = true), settings)
   }
 
