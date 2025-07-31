@@ -25,7 +25,11 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 
-@Serializable data class Config(val settings: JsonObject, val overrides: List<Override>)
+@Serializable
+data class Config(
+    val settings: JsonObject = buildJsonObject {},
+    val overrides: List<Override> = emptyList()
+)
 
 typealias AppProperties = Map<String, RuntimeProperty>
 
