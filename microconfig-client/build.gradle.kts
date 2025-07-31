@@ -35,7 +35,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation(project(":microconfig"))
+        api(project(":microconfig"))
         api(libs.ktor.client.core)
       }
     }
