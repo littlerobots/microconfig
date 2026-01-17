@@ -15,12 +15,12 @@
  */
 package nl.littlerobots.microconfig
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
-@Serializable data class Schedule(val from: Instant? = null, val until: Instant? = null)
+@Serializable
+data class Schedule(val from: kotlin.time.Instant? = null, val until: kotlin.time.Instant? = null)
 
-internal fun Schedule?.matches(instant: Instant): Boolean {
+internal fun Schedule?.matches(instant: kotlin.time.Instant): Boolean {
   if (this == null) {
     return true
   }
@@ -33,5 +33,5 @@ internal fun Schedule?.matches(instant: Instant): Boolean {
   if (from == null || until == null) {
     return true
   }
-  return instant >= from && instant < until
+  return instant in from..<until
 }

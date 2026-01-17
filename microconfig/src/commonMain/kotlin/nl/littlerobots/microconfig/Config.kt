@@ -15,8 +15,6 @@
  */
 package nl.littlerobots.microconfig
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -64,7 +62,7 @@ private fun matchesConditions(
 fun <T> Config.resolve(
     serializer: KSerializer<T>,
     properties: AppProperties,
-    activationTime: Instant = Clock.System.now()
+    activationTime: kotlin.time.Instant = kotlin.time.Clock.System.now()
 ): T {
   val resolvedSettings =
       overrides.fold(settings) { settings, override ->
