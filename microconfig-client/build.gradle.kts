@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +10,10 @@ plugins {
 kotlin {
   androidLibrary {
     namespace = "nl.littlerobots.microconfig.client"
+
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_1_8
+    }
   }
 
   kotlin {

@@ -1,13 +1,13 @@
 [versions]
-agp = "8.10.1"
-io-ktor = "3.2.0"
-kotlin = "2.1.21"
-kotlinxDatetime = "0.6.2"
+agp = "9.0.0"
+io-ktor = "3.3.3"
+kotlin = "2.3.0"
+kotlinxDatetime = "0.7.1"
 
 [libraries]
 androidLibrary-multiplatform-plugin = { module = "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin", version.ref = "agp" }
 kotlin-multiplatform-plugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
-kotlin-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
+kotlin-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "io-ktor" }
@@ -19,6 +19,6 @@ semver = "io.github.z4kn4fein:semver:3.0.0"
 androidLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-mavenPublish = "com.vanniktech.maven.publish:0.32.0"
-spotless = "com.diffplug.spotless:7.0.4"
-versionCatalogUpdate = "nl.littlerobots.version-catalog-update:1.0.0"
+mavenPublish = "com.vanniktech.maven.publish:0.35.0"
+spotless = "com.diffplug.spotless:8.1.0"
+versionCatalogUpdate = "nl.littlerobots.version-catalog-update:1.0.1"

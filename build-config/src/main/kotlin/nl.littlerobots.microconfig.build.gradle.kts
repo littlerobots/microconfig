@@ -1,5 +1,4 @@
-import com.android.build.api.dsl.androidLibrary
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 extensions.configure<KotlinMultiplatformExtension> {
@@ -8,17 +7,9 @@ extensions.configure<KotlinMultiplatformExtension> {
   iosArm64()
   iosSimulatorArm64()
 
-  @Suppress("UnstableApiUsage")
-  androidLibrary {
+  extensions.configure<KotlinMultiplatformAndroidLibraryExtension>("androidLibrary") {
     compileSdk = 36
     minSdk = 24
-
-    compilations.configureEach {
-      compileTaskProvider.configure {
-        compilerOptions {
-          (this as KotlinJvmCompilerOptions).jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
-        }
-      }
-    }
   }
 }
+

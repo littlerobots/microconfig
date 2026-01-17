@@ -1,4 +1,4 @@
-import com.android.build.api.dsl.androidLibrary
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlinMultiplatform)
@@ -8,9 +8,12 @@ plugins {
 }
 
 kotlin {
-  @Suppress("UnstableApiUsage")
   androidLibrary {
     namespace = "nl.littlerobots.microconfig.shared"
+
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_1_8
+    }
   }
 
   sourceSets {
