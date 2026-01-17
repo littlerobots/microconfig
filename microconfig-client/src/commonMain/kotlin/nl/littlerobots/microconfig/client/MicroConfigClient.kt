@@ -61,7 +61,7 @@ class MicroConfigClient<T>(
     private val serializer: KSerializer<T>,
     private val appPropertiesProvider: () -> AppProperties = { propertiesOf() },
     private val httpClient: HttpClient = HttpClient { install(HttpCache) },
-    private val logger: Logger? = null
+    private val logger: Logger? = null,
 ) {
 
   private val cacheConfigPath = Path(cacheConfigPath)
@@ -86,7 +86,7 @@ class MicroConfigClient<T>(
       serializer: KSerializer<T>,
       appPropertiesProvider: () -> AppProperties = { propertiesOf() },
       engine: HttpClientEngine,
-      logger: Logger?
+      logger: Logger?,
   ) : this(
       cacheConfigPath,
       configUrl,

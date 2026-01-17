@@ -11,13 +11,14 @@ plugins {
 
 configure<SpotlessExtension> {
   kotlin {
+    targetExclude("**/build/**/*")
     target("**/*.kt")
-    ktfmt("0.54")
+    ktfmt("0.61")
     licenseHeaderFile(rootProject.file("spotless/license.txt"))
   }
   kotlinGradle {
     target("*.gradle.kts")
-    ktfmt("0.54")
+    ktfmt("0.61")
   }
 }
 

@@ -25,7 +25,7 @@ import kotlinx.serialization.json.buildJsonObject
 @Serializable
 data class Config(
     val settings: JsonObject = buildJsonObject {},
-    val overrides: List<Override> = emptyList()
+    val overrides: List<Override> = emptyList(),
 )
 
 typealias AppProperties = Map<String, RuntimeProperty>
@@ -37,7 +37,7 @@ private val resolveSettingsParser = Json {
 
 private fun matchesConditions(
     conditions: List<ConditionProperties>,
-    properties: Map<String, RuntimeProperty>
+    properties: Map<String, RuntimeProperty>,
 ): Boolean {
   val keys = properties.keys
   return conditions.all { condition ->
@@ -62,12 +62,14 @@ private fun matchesConditions(
 fun <T> Config.resolve(
     serializer: KSerializer<T>,
     properties: AppProperties,
-    activationTime: kotlin.time.Instant = kotlin.time.Clock.System.now()
+    activationTime: kotlin.time.Instant = kotlin.time.Clock.System.now(),
 ): T {
   val resolvedSettings =
       overrides.fold(settings) { settings, override ->
-        if (matchesConditions(override.matching, properties) &&
-            override.schedule.matches(activationTime)) {
+        if (
+            matchesConditions(override.matching, properties) &&
+                override.schedule.matches(activationTime)
+        ) {
           buildJsonObject {
             for (entry in settings) {
               put(entry.key, entry.value)

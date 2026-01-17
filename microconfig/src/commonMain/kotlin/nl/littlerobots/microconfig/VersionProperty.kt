@@ -28,11 +28,11 @@ import io.github.z4kn4fein.semver.toVersion
  */
 class VersionProperty(
     private val version: Version,
-    private val onInvalidConstraint: (String) -> Boolean = { false }
+    private val onInvalidConstraint: (String) -> Boolean = { false },
 ) : RuntimeProperty {
   constructor(
       version: String,
-      onInvalidConstraint: (String) -> Boolean = { false }
+      onInvalidConstraint: (String) -> Boolean = { false },
   ) : this(version.toVersion(), onInvalidConstraint)
 
   override fun matches(s: String): Boolean {

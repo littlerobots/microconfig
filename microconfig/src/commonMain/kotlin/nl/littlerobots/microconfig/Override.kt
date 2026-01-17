@@ -56,5 +56,5 @@ object CoercedStringSerializer : KSerializer<String> {
 data class Override(
     val settings: JsonObject = buildJsonObject {},
     val matching: List<ConditionProperties> = emptyList(),
-    val schedule: Schedule? = null
+    val schedule: Schedule? = null,
 )

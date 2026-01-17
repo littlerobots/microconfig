@@ -29,12 +29,12 @@ class ConfigTest {
   data class TestSettings(
       val enableFeature: Boolean = false,
       val obsoleteFeature: String = "disabled",
-      val appstate: AppState = AppState.ACTIVE
+      val appstate: AppState = AppState.ACTIVE,
   ) {
     @Serializable
     enum class AppState {
       @SerialName("active") ACTIVE,
-      @SerialName("inactive") INACTIVE
+      @SerialName("inactive") INACTIVE,
     }
   }
 
@@ -42,22 +42,22 @@ class ConfigTest {
   fun `Resolves default config`() {
     val json =
         """
+        {
+          "settings": {
+            "enableFeature": true
+          },
+          "overrides": [
             {
+              "matching": [{
+                "version": "<1.0.0"
+              }],
               "settings": {
-                "enableFeature": true
-              },
-              "overrides": [
-                {
-                  "matching": [{
-                    "version": "<1.0.0"
-                  }],
-                  "settings": {
-                    "enableFeature": false,
-                    "obsoleteFeature": "disabled"                   
-                  }
-                }
-              ]
+                "enableFeature": false,
+                "obsoleteFeature": "disabled"                   
+              }
             }
+          ]
+        }
         """
             .trimIndent()
     val config = parser.decodeFromString<Config>(json)
@@ -69,23 +69,23 @@ class ConfigTest {
   fun `Resolves override`() {
     val json =
         """
+        {
+          "settings": {
+            "enableFeature": true
+          },
+          "overrides": [
             {
+              "matching": [{
+                "version": "<1.0.0"
+              }],
               "settings": {
-                "enableFeature": true
-              },
-              "overrides": [
-                {
-                  "matching": [{
-                    "version": "<1.0.0"
-                  }],
-                  "settings": {
-                    "enableFeature": false,
-                    "obsoleteFeature": "enabled",
-                    "appstate" : "inactive"
-                  }
-                }
-              ]
+                "enableFeature": false,
+                "obsoleteFeature": "enabled",
+                "appstate" : "inactive"
+              }
             }
+          ]
+        }
         """
             .trimIndent()
     val config = parser.decodeFromString<Config>(json)
@@ -110,23 +110,23 @@ class ConfigTest {
   fun `Resolves with multiple conditions override`() {
     val json =
         """
+        {
+          "settings": {
+            "enableFeature": false
+          },
+          "overrides": [
             {
+              "matching": [{
+                "version": "<1.0.0"
+              }, { "platform" : "ios" }],
               "settings": {
-                "enableFeature": false
-              },
-              "overrides": [
-                {
-                  "matching": [{
-                    "version": "<1.0.0"
-                  }, { "platform" : "ios" }],
-                  "settings": {
-                    "enableFeature": true,
-                    "obsoleteFeature": "enabled",
-                    "appstate" : "inactive"
-                  }
-                }
-              ]
+                "enableFeature": true,
+                "obsoleteFeature": "enabled",
+                "appstate" : "inactive"
+              }
             }
+          ]
+        }
         """
             .trimIndent()
     val config = parser.decodeFromString<Config>(json)
@@ -153,24 +153,24 @@ class ConfigTest {
   fun `Does not resolve override for missing properties`() {
     val json =
         """
+        {
+          "settings": {
+            "enableFeature": true
+          },
+          "overrides": [
             {
+              "matching": [{
+                "version": "<1.0.0",
+                "platform" : "windows"
+              }],
               "settings": {
-                "enableFeature": true
-              },
-              "overrides": [
-                {
-                  "matching": [{
-                    "version": "<1.0.0",
-                    "platform" : "windows"
-                  }],
-                  "settings": {
-                    "enableFeature": false,
-                    "obsoleteFeature": "enabled",
-                    "appstate" : "inactive"
-                  }
-                }
-              ]
+                "enableFeature": false,
+                "obsoleteFeature": "enabled",
+                "appstate" : "inactive"
+              }
             }
+          ]
+        }
         """
             .trimIndent()
     val config = parser.decodeFromString<Config>(json)
