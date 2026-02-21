@@ -1,5 +1,7 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 
+buildscript { dependencies { classpath(libs.kotlin.gradle.plugin) } }
+
 plugins {
   alias(libs.plugins.androidLibrary) apply false
   alias(libs.plugins.kotlinMultiplatform) apply false
