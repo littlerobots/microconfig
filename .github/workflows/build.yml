@@ -7,8 +7,6 @@ on:
 
 jobs:
   build:
-    env:
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
     runs-on: macos-latest
     steps:
       - name: "Checkout repository"
