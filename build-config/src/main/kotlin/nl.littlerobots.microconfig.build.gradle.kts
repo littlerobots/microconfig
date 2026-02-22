@@ -50,11 +50,11 @@ plugins.withId("com.vanniktech.maven.publish") {
 
 plugins.withId("signing") {
   extensions.configure<SigningExtension>() {
-    val signingId = providers.gradleProperty("signingId").orNull
-    val signingPassword = providers.gradleProperty("signingPassword").orNull
-    val signingKeyId = providers.gradleProperty("signingKeyId").orNull
-    if (signingId != null && signingPassword != null && signingKeyId != null) {
-      useInMemoryPgpKeys(signingKeyId, signingId, signingPassword)
+    val signingKey = providers.gradleProperty("signingInMemoryKey").orNull
+    val signingPassword = providers.gradleProperty("signingInMemoryKeyPassword").orNull
+    val signingKeyId = providers.gradleProperty("signingInMemoryKeyId").orNull
+    if (signingKey != null && signingPassword != null && signingKeyId != null) {
+      useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     } else {
       useGpgCmd()
     }
