@@ -9,12 +9,12 @@ plugins {
 }
 
 mavenPublishing {
-  coordinates("nl.littlerobots.microconfig", "core", version as String)
+  coordinates("nl.littlerobots.microconfig", "microconfig", version as String)
 }
 
 kotlin {
   androidLibrary {
-    namespace = "nl.littlerobots.microconfig.core"
+    namespace = "nl.littlerobots.microconfig"
 
     compilerOptions {
       jvmTarget = JvmTarget.JVM_1_8
