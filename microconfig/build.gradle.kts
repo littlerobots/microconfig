@@ -4,12 +4,17 @@ plugins {
   alias(libs.plugins.kotlinMultiplatform)
   alias(libs.plugins.androidLibrary)
   alias(libs.plugins.kotlinx.serialization)
+  alias(libs.plugins.mavenPublish)
   id("nl.littlerobots.microconfig.build")
+}
+
+mavenPublishing {
+  coordinates("nl.littlerobots.microconfig", "core", version as String)
 }
 
 kotlin {
   androidLibrary {
-    namespace = "nl.littlerobots.microconfig.shared"
+    namespace = "nl.littlerobots.microconfig.core"
 
     compilerOptions {
       jvmTarget = JvmTarget.JVM_1_8

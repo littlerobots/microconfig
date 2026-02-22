@@ -4,7 +4,15 @@ plugins {
   alias(libs.plugins.kotlinMultiplatform)
   alias(libs.plugins.androidLibrary)
   alias(libs.plugins.kotlinx.serialization)
+  alias(libs.plugins.mavenPublish)
   id("nl.littlerobots.microconfig.build")
+}
+
+mavenPublishing {
+  coordinates("nl.littlerobots.microconfig", "client", version as String)
+  pom {
+    name = "Microconfig client"
+  }
 }
 
 kotlin {

@@ -1,0 +1,27 @@
+name: 'Build release'
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    env:
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+    runs-on: macos-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Set up JDK"
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: "Setup Gradle"
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: "Build and test"
+        run: ./gradlew build check
