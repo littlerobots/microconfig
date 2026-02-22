@@ -1,8 +1,11 @@
 # Micro config
+[![Maven Central](https://img.shields.io/maven-central/v/nl.littlerobots.microconfig/microconfig)]([https://central.sonatype.com/artifact/nl.littlerobots.version-catalog-update/nl.littlerobots.version-catalog-update.gradle.plugin](https://central.sonatype.com/artifact/nl.littlerobots.microconfig/microconfig))
 
 This is a tiny library to manage run-time arbitrary config stored as json on a server.
 
-## Format the json format should look like this
+## Format 
+
+The json format should look like this
 
 ```json
 {
@@ -105,7 +108,7 @@ library to match versions and version ranges.
 
 ## MicroConfigClient
 
-To fetch, cache and resolve config the `client` module provides `MicroConfigClient`.
+To fetch, cache and resolve config the `client` module provides [`MicroConfigClient`](https://github.com/littlerobots/microconfig/blob/main/microconfig-client/src/commonMain/kotlin/nl/littlerobots/microconfig/client/MicroConfigClient.kt).
 
 ## Acknowledgements
 
