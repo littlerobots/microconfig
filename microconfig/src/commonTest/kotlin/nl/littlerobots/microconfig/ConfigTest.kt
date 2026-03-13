@@ -185,6 +185,41 @@ class ConfigTest {
   }
 
   @Test
+  fun `Does not resolve override for missing properties for incomplete version`() {
+    val json =
+        """
+        {
+          "settings": {
+            "enableFeature": true
+          },
+          "overrides": [
+            {
+              "matching": [{
+                "version": "<1.0.0",
+                "platform" : "windows"
+              }],
+              "settings": {
+                "enableFeature": false,
+                "obsoleteFeature": "enabled",
+                "appstate" : "inactive"
+              }
+            }
+          ]
+        }
+        """
+            .trimIndent()
+    val config = parser.decodeFromString<Config>(json)
+    val settings =
+        config.resolve(
+            TestSettings.serializer(),
+            propertiesOf(
+                "version" to VersionProperty("0.8", { fail("Should handle constraint") }),
+            ),
+        )
+    assertEquals(TestSettings(enableFeature = true), settings)
+  }
+
+  @Test
   fun `parses empty object`() {
     val json = "{}"
     val config = parser.decodeFromString<Config>(json)

@@ -33,7 +33,7 @@ class VersionProperty(
   constructor(
       version: String,
       onInvalidConstraint: (String) -> Boolean = { false },
-  ) : this(version.toVersion(), onInvalidConstraint)
+  ) : this(version.toVersion(strict = false), onInvalidConstraint)
 
   override fun matches(s: String): Boolean {
     try {

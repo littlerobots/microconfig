@@ -2,7 +2,7 @@ import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-version = "1.0.0"
+version = "1.0.1"
 
 extensions.configure<KotlinMultiplatformExtension> {
   jvm()
